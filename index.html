@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bolão da Copa do Mundo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Outfit', sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); color: #fff; min-height: 100vh; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React e ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Firebase SDK (CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+  <script>
+    // Inicializar Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAocYorgMDHSf2y8rCeaVyvT7DztI",
+      authDomain: "bolao-copa-5750f.firebaseapp.com",
+      projectId: "bolao-copa-5750f",
+      storageBucket: "bolao-copa-5750f.firebasestorage.app",
+      messagingSenderId: "195737276586",
+      appId: "1:195737276586:web:f9e5787a879d9400534Od3"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Constantes
+    const ENTRADA = 50;
+    const TEAMS = [
+      { name: "Brasil", flag: "🇧🇷" }, { name: "Argentina", flag: "🇦🇷" }, { name: "França", flag: "🇫🇷" },
+      { name: "Inglaterra", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" }, { name: "Espanha", flag: "🇪🇸" }, { name: "Alemanha", flag: "🇩🇪" },
+      { name: "Portugal", flag: "🇵🇹" }, { name: "Países Baixos", flag: "🇳🇱" }, { name: "Bélgica", flag: "🇧🇪" },
+      { name: "Uruguai", flag: "🇺🇾" }, { name: "Croácia", flag: "🇭🇷" }, { name: "Marrocos", flag: "🇲🇦" },
+      { name: "EUA", flag: "🇺🇸" }, { name: "Japão", flag: "🇯🇵" }, { name: "Colômbia", flag: "🇨🇴" },
+      { name: "México", flag: "🇲🇽" }, { name: "Outro", flag: "🌍" }
+    ];
+
+    const BRAZIL_GAMES = [
+      { id: "g1", phase: "Grupos", label: "Jogo 1", opponent: "Marrocos" },
+      { id: "g2", phase: "Grupos", label: "Jogo 2", opponent: "Haiti" },
+      { id: "g3", phase: "Grupos", label: "Jogo 3", opponent: "Escócia" },
+      { id: "r16", phase: "Oitavas", label: "Oitavas", opponent: "Adversário" },
+      { id: "qf", phase: "Quartas", label: "Quartas", opponent: "Adversário" },
+      { id: "sf", phase: "Semi", label: "Semifinal", opponent: "Adversário" },
+      { id: "final", phase: "Final", label: "Final", opponent: "Adversário" }
+    ];
+
+    const fmt = (v) => `R$ ${v.toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+
+    // Componente React
+    function BolaoApp() {
+      const { useState, useEffect, useCallback } = React;
+
+      const [screen, setScreen] = useState("home");
+      const [entries, setEntries] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [saving, setSaving] = useState(false);
+      const [name, setName] = useState("");
+      const [champion, setChampion] = useState(null);
+      const [customChampion, setCustomChampion] = useState("");
+      const [scores, setScores] = useState({});
+      const [submitted, setSubmitted] = useState(false);
+      const [error, setError] = useState("");
+
+      // Carregar apostas
+      const loadEntries = useCallback(async () => {
+        try {
+          setLoading(true);
+          const snapshot = await db.collection("apostas").orderBy("timestamp", "asc").get();
+          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setEntries(data);
+        } catch (err) {
+          console.error("Erro ao carregar:", err);
+        }
+        setLoading(false);
+      }, []);
+
+      useEffect(() => {
+        loadEntries();
+      }, [loadEntries]);
+
+      useEffect(() => {
+        if (screen === "board" || screen === "prize") {
+          loadEntries();
+        }
+      }, [screen, loadEntries]);
+
+      const handleSubmit = async () => {
+        if (!name.trim()) return setError("Digite seu nome!");
+        if (!champion) return setError("Escolha o campeão!");
+        if (champion.name === "Outro" && !customChampion.trim()) return setError("Digite o país!");
+
+        const allFilled = BRAZIL_GAMES.every(g => {
+          const s = scores[g.id];
+          return s && s.brazil !== "" && s.opponent !== "";
+        });
+        if (!allFilled) return setError("Preencha todos os 7 jogos!");
+
+        setSaving(true);
+        setError("");
+
+        const entry = {
+          name: name.trim(),
+          champion: champion.name === "Outro" ? { name: customChampion.trim(), flag: "🌍" } : champion,
+          scores,
+          date: new Date().toLocaleDateString("pt-BR"),
+          timestamp: new Date().getTime()
+        };
+
+        try {
+          await db.collection("apostas").add(entry);
+          setSubmitted(true);
+          setTimeout(() => {
+            setSubmitted(false);
+            setName("");
+            setChampion(null);
+            setCustomChampion("");
+            setScores({});
+            setError("");
+            setScreen("board");
+            loadEntries();
+          }, 1500);
+        } catch (err) {
+          setError("Erro ao salvar: " + err.message);
+          console.error(err);
+        }
+        setSaving(false);
+      };
+
+      const total = entries.length * ENTRADA;
+      const pots = {
+        champion: total * 0.5,
+        brazil: total * 0.5
+      };
+
+      return React.createElement(
+        "div",
+        { style: { minHeight: "100vh", background: "linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)", color: "#fff", padding: "20px" } },
+        React.createElement(
+          "div",
+          { style: { maxWidth: 600, margin: "0 auto" } },
+          // Header
+          React.createElement(
+            "div",
+            { style: { textAlign: "center", marginBottom: 40 } },
+            React.createElement("div", { style: { fontSize: 60, marginBottom: 10 } }, "⚽"),
+            React.createElement("h1", { style: { fontSize: 32, fontWeight: 700 } }, "Bolão da Copa"),
+            React.createElement("p", { style: { color: "rgba(255,255,255,0.7)" } }, "R$50 de entrada")
+          ),
+
+          // Tabs
+          React.createElement(
+            "div",
+            { style: { display: "flex", gap: 10, marginBottom: 30, justifyContent: "center", flexWrap: "wrap" } },
+            ["home", "form", "board", "prize"].map(s =>
+              React.createElement(
+                "button",
+                {
+                  key: s,
+                  onClick: () => setScreen(s),
+                  style: {
+                    padding: "8px 16px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: screen === s ? "#ffc107" : "rgba(255,255,255,0.1)",
+                    color: screen === s ? "#000" : "#fff",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    fontFamily: "inherit"
+                  }
+                },
+                s === "home" ? "Início" : s === "form" ? "Apostar" : s === "board" ? `Placar (${entries.length})` : "Prêmios"
+              )
+            )
+          ),
+
+          // HOME SCREEN
+          screen === "home" && React.createElement(
+            "div",
+            { style: { textAlign: "center" } },
+            React.createElement("p", { style: { marginBottom: 20, color: "rgba(255,255,255,0.8)" } }, "Aposte no campeão e nos placares do Brasil!"),
+            entries.length > 0 && React.createElement("p", { style: { marginBottom: 20, fontSize: 24, fontWeight: 700, color: "#ffc107" } }, `Pote: ${fmt(total)}`),
+            React.createElement("button", {
+              onClick: () => setScreen("form"),
+              style: { background: "linear-gradient(135deg, #ffc107, #ff9800)", color: "#000", border: "none", padding: "14px 40px", borderRadius: 10, fontSize: 16, fontWeight: 700, cursor: "pointer", width: "auto" }
+            }, "Fazer Aposta →")
+          ),
+
+          // FORM SCREEN
+          screen === "form" && React.createElement(
+            "div",
+            null,
+            submitted ? React.createElement(
+              "div",
+              { style: { textAlign: "center", padding: "60px 0" } },
+              React.createElement("div", { style: { fontSize: 60, marginBottom: 20 } }, "🎉"),
+              React.createElement("h2", { style: { fontSize: 24, fontWeight: 700 } }, "Aposta registrada!")
+            ) : React.createElement(
+              React.Fragment,
+              null,
+              React.createElement("h2", { style: { marginBottom: 20 } }, "Sua Aposta"),
+              React.createElement("input", {
+                value: name,
+                onChange: (e) => setName(e.target.value),
+                placeholder: "Seu nome",
+                style: { width: "100%", padding: "12px", marginBottom: 20, borderRadius: 8, border: "none", fontSize: 16, fontFamily: "inherit" }
+              }),
+
+              React.createElement("h3", { style: { marginBottom: 12, fontSize: 16, fontWeight: 600 } }, "🏆 Campeão"),
+              React.createElement(
+                "div",
+                { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))", gap: 8, marginBottom: 12 } },
+                TEAMS.map(t =>
+                  React.createElement(
+                    "button",
+                    {
+                      key: t.name,
+                      onClick: () => { setChampion(t); setCustomChampion(""); },
+                      style: {
+                        padding: "10px",
+                        borderRadius: 8,
+                        border: "none",
+                        background: champion?.name === t.name ? "#ffc107" : "rgba(255,255,255,0.1)",
+                        color: champion?.name === t.name ? "#000" : "#fff",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                        fontSize: 12,
+                        fontFamily: "inherit"
+                      }
+                    },
+                    `${t.flag} ${t.name}`
+                  )
+                )
+              ),
+              champion?.name === "Outro" && React.createElement("input", {
+                value: customChampion,
+                onChange: (e) => setCustomChampion(e.target.value),
+                placeholder: "País",
+                style: { width: "100%", padding: "12px", marginBottom: 12, borderRadius: 8, border: "none", fontSize: 16, fontFamily: "inherit" }
+              }),
+
+              React.createElement("h3", { style: { marginBottom: 12, fontSize: 16, fontWeight: 600 } }, "🇧🇷 Placares (7 jogos)"),
+              BRAZIL_GAMES.map(g => {
+                const s = scores[g.id] || { brazil: "", opponent: "" };
+                return React.createElement(
+                  "div",
+                  {
+                    key: g.id,
+                    style: { display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 8, marginBottom: 12, alignItems: "center" }
+                  },
+                  React.createElement("input", {
+                    type: "number",
+                    min: "0",
+                    max: "20",
+                    value: s.brazil,
+                    onChange: (e) => setScores(p => ({ ...p, [g.id]: { ...p[g.id], brazil: e.target.value } })),
+                    placeholder: "0",
+                    style: { padding: "10px", borderRadius: 8, border: "none", textAlign: "center", fontSize: 16, fontFamily: "inherit" }
+                  }),
+                  React.createElement("span", { style: { fontWeight: 700 } }, "×"),
+                  React.createElement("input", {
+                    type: "number",
+                    min: "0",
+                    max: "20",
+                    value: s.opponent,
+                    onChange: (e) => setScores(p => ({ ...p, [g.id]: { ...p[g.id], opponent: e.target.value } })),
+                    placeholder: "0",
+                    style: { padding: "10px", borderRadius: 8, border: "none", textAlign: "center", fontSize: 16, fontFamily: "inherit" }
+                  })
+                );
+              }),
+
+              error && React.createElement("p", { style: { color: "#ff6b6b", marginBottom: 12 } }, error),
+              React.createElement("button", {
+                onClick: handleSubmit,
+                disabled: saving,
+                style: { background: "#ffc107", color: "#000", border: "none", padding: "14px", borderRadius: 10, fontWeight: 700, cursor: "pointer", opacity: saving ? 0.6 : 1, fontFamily: "inherit" }
+              }, saving ? "Salvando..." : "Confirmar Aposta")
+            )
+          ),
+
+          // BOARD SCREEN
+          screen === "board" && React.createElement(
+            "div",
+            null,
+            React.createElement("h2", null, `Apostas (${entries.length})`),
+            loading ? React.createElement("p", null, "Carregando...") : entries.length === 0 ? React.createElement("p", null, "Nenhuma aposta") : entries.map((e, i) =>
+              React.createElement(
+                "div",
+                {
+                  key: e.id,
+                  style: { background: "rgba(255,255,255,0.1)", padding: 12, borderRadius: 8, marginBottom: 10 }
+                },
+                React.createElement("strong", null, `${i + 1}. ${e.name}`),
+                React.createElement("div", null, `🏆 ${e.champion.flag} ${e.champion.name}`),
+                React.createElement("div", { style: { fontSize: 12, color: "rgba(255,255,255,0.6)" } }, e.date)
+              )
+            )
+          ),
+
+          // PRIZE SCREEN
+          screen === "prize" && React.createElement(
+            "div",
+            null,
+            React.createElement("h2", null, "Prêmios"),
+            React.createElement("div", { style: { fontSize: 28, fontWeight: 700, color: "#ffc107", marginBottom: 20 } }, `Pote: ${fmt(total)}`),
+            React.createElement(
+              "div",
+              { style: { background: "rgba(255,193,7,0.15)", padding: 16, borderRadius: 10 } },
+              React.createElement("div", { style: { marginBottom: 10 } }, `🏆 Campeão (50%): ${fmt(pots.champion)}`),
+              React.createElement("div", null, `🇧🇷 Brasil (50%): ${fmt(pots.brazil)}`)
+            )
+          )
+        )
+      );
+    }
+
+    // Renderizar app
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(React.createElement(BolaoApp));
+  </script>
+</body>
+</html>
