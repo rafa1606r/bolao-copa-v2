@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bolão da Copa do Mundo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Outfit', sans-serif; 
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); 
+      color: #fff; 
+      min-height: 100vh; 
+      padding: 20px; 
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header .emoji { font-size: 60px; margin-bottom: 10px; }
+    .header h1 { font-size: 32px; margin: 10px 0; font-weight: 700; }
+    .header p { color: rgba(255,255,255,0.7); }
+    .tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
+    .tab-btn { 
+      padding: 8px 16px; 
+      border-radius: 8px; 
+      border: none; 
+      background: rgba(255,255,255,0.1); 
+      color: #fff; 
+      cursor: pointer; 
+      font-weight: 600;
+      font-family: inherit;
+    }
+    .tab-btn.active { background: #ffc107; color: #000; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    input, select { 
+      width: 100%; 
+      padding: 12px; 
+      margin-bottom: 12px; 
+      border-radius: 8px; 
+      border: none; 
+      font-size: 16px;
+      font-family: inherit;
+    }
+    button { 
+      width: 100%; 
+      padding: 14px; 
+      border-radius: 10px; 
+      border: none; 
+      background: #ffc107; 
+      color: #000; 
+      font-weight: 700; 
+      cursor: pointer; 
+      margin-bottom: 12px;
+      font-family: inherit;
+      font-size: 16px;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error { color: #ff6b6b; margin-bottom: 12px; padding: 8px; background: rgba(255,107,107,0.2); border-radius: 6px; }
+    .entry { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+    .grid-times { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-bottom: 12px; }
+    .time-btn {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: inherit;
+      font-size: 12px;
+    }
+    .time-btn.selected { background: #ffc107; color: #000; }
+    .grid-scores { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 12px; }
+    h2 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+    h3 { font-size: 16px; font-weight: 600; margin: 20px 0 12px 0; }
+    .pote { font-size: 28px; font-weight: 700; color: #ffc107; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="emoji">⚽</div>
+      <h1>Bolão da Copa</h1>
+      <p>R$50 de entrada</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showScreen('home')">Início</button>
+      <button class="tab-btn" onclick="showScreen('form')">Apostar</button>
+      <button class="tab-btn" onclick="showScreen('board')">Placar (<span id="placar-count">0</span>)</button>
+      <button class="tab-btn" onclick="showScreen('prize')">Prêmios</button>
+    </div>
+
+    <!-- HOME -->
+    <div id="home" class="screen active">
+      <p style="text-align: center; margin-bottom: 20px; color: rgba(255,255,255,0.8);">Aposte no campeão e nos placares do Brasil!</p>
+      <p id="pote-home" style="text-align: center; display: none; font-size: 24px; font-weight: 700; color: #ffc107; margin-bottom: 20px;"></p>
+      <button onclick="showScreen('form')">Fazer Aposta →</button>
+    </div>
+
+    <!-- FORM -->
+    <div id="form" class="screen">
+      <h2>Sua Aposta</h2>
+      
+      <input id="nome" type="text" placeholder="Seu nome">
+      
+      <h3>🏆 Campeão</h3>
+      <div class="grid-times" id="times-grid"></div>
+      <input id="outro-pais" type="text" placeholder="País" style="display: none;">
+
+      <h3>🇧🇷 Placares (7 jogos)</h3>
+      <div id="jogos-grid"></div>
+
+      <div id="erro-form" class="error" style="display: none;"></div>
+      <button onclick="salvarAposta()">Confirmar Aposta</button>
+    </div>
+
+    <!-- BOARD -->
+    <div id="board" class="screen">
+      <h2>Apostas (<span id="count-apostas">0</span>)</h2>
+      <div id="apostas-list">Carregando...</div>
+    </div>
+
+    <!-- PRIZE -->
+    <div id="prize" class="screen">
+      <h2>Prêmios</h2>
+      <div class="pote" id="pote-prize">Pote: R$ 0,00</div>
+      <div style="background: rgba(255,193,7,0.15); padding: 16px; border-radius: 10px;">
+        <div style="margin-bottom: 10px;">🏆 Campeão (50%): <strong id="premio-camp">R$ 0,00</strong></div>
+        <div>🇧🇷 Brasil (50%): <strong id="premio-bra">R$ 0,00</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ENTRADA = 50;
+    const TEAMS = [
+      { name: "Brasil", flag: "🇧🇷" }, { name: "Argentina", flag: "🇦🇷" }, { name: "França", flag: "🇫🇷" },
+      { name: "Inglaterra", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" }, { name: "Espanha", flag: "🇪🇸" }, { name: "Alemanha", flag: "🇩🇪" },
+      { name: "Portugal", flag: "🇵🇹" }, { name: "Países Baixos", flag: "🇳🇱" }, { name: "Bélgica", flag: "🇧🇪" },
+      { name: "Uruguai", flag: "🇺🇾" }, { name: "Croácia", flag: "🇭🇷" }, { name: "Marrocos", flag: "🇲🇦" },
+      { name: "EUA", flag: "🇺🇸" }, { name: "Japão", flag: "🇯🇵" }, { name: "Colômbia", flag: "🇨🇴" },
+      { name: "México", flag: "🇲🇽" }, { name: "Outro", flag: "🌍" }
+    ];
+
+    const BRAZIL_GAMES = [
+      { id: "g1", phase: "Grupos", label: "Jogo 1", opponent: "Marrocos" },
+      { id: "g2", phase: "Grupos", label: "Jogo 2", opponent: "Haiti" },
+      { id: "g3", phase: "Grupos", label: "Jogo 3", opponent: "Escócia" },
+      { id: "r16", phase: "Oitavas", label: "Oitavas", opponent: "Adversário" },
+      { id: "qf", phase: "Quartas", label: "Quartas", opponent: "Adversário" },
+      { id: "sf", phase: "Semi", label: "Semifinal", opponent: "Adversário" },
+      { id: "final", phase: "Final", label: "Final", opponent: "Adversário" }
+    ];
+
+    let campeoEscolhido = null;
+    let apostas = [];
+
+    const fmt = (v) => `R$ ${v.toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+
+    // Firebase Functions via REST API
+    const FIREBASE_DB = "https://firestore.googleapis.com/v1/projects/bolao-copa-5750f/databases/(default)/documents/apostas";
+    const API_KEY = "AIzaSyAocYorgMDHSf2y8rCeaVyvT7DztI";
+
+    async function carregarApostasFirebase() {
+      try {
+        const response = await fetch(`${FIREBASE_DB}?key=${API_KEY}`);
+        const data = await response.json();
+        
+        if (data.documents) {
+          apostas = data.documents.map(doc => {
+            const fields = doc.fields;
+            return {
+              id: doc.name.split('/').pop(),
+              nome: fields.name?.stringValue || "",
+              campeao: fields.champion ? {
+                name: fields.champion.mapValue.fields.name.stringValue,
+                flag: fields.champion.mapValue.fields.flag.stringValue
+              } : { name: "", flag: "" },
+              scores: fields.scores?.mapValue?.fields || {},
+              date: fields.date?.stringValue || ""
+            };
+          });
+        } else {
+          apostas = [];
+        }
+        atualizarUI();
+      } catch (err) {
+        console.error("Erro ao carregar Firebase:", err);
+        // Fallback para localStorage
+        const salvo = localStorage.getItem('apostas-bolao');
+        apostas = salvo ? JSON.parse(salvo) : [];
+        atualizarUI();
+      }
+    }
+
+    async function salvarNoFirebase(entry) {
+      try {
+        const response = await fetch(`${FIREBASE_DB}?key=${API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              name: { stringValue: entry.nome },
+              champion: {
+                mapValue: {
+                  fields: {
+                    name: { stringValue: entry.campeao.name },
+                    flag: { stringValue: entry.campeao.flag }
+                  }
+                }
+              },
+              scores: { mapValue: { fields: entry.scores } },
+              date: { stringValue: entry.date },
+              timestamp: { integerValue: entry.timestamp }
+            }
+          })
+        });
+        
+        if (response.ok) {
+          console.log('Salvo no Firebase com sucesso');
+          return true;
+        } else {
+          console.error('Erro ao salvar:', await response.text());
+          // Fallback: salvar no localStorage
+          localStorage.setItem('apostas-bolao', JSON.stringify([...apostas, entry]));
+          return true;
+        }
+      } catch (err) {
+        console.error("Erro ao salvar Firebase:", err);
+        // Fallback: salvar no localStorage
+        localStorage.setItem('apostas-bolao', JSON.stringify([...apostas, entry]));
+        return true;
+      }
+    }
+
+    // Montar grid de times
+    function initTimes() {
+      const html = TEAMS.map((t, idx) => 
+        `<button class="time-btn" onclick="escolherCampeao(${idx})">${t.flag} ${t.name}</button>`
+      ).join('');
+      document.getElementById('times-grid').innerHTML = html;
+    }
+
+    // Montar grid de jogos
+    function initJogos() {
+      const html = BRAZIL_GAMES.map(g => `
+        <div class="grid-scores">
+          <input type="number" id="br_${g.id}" min="0" max="20" placeholder="0">
+          <span style="font-weight: 700;">×</span>
+          <input type="number" id="op_${g.id}" min="0" max="20" placeholder="0">
+        </div>
+      `).join('');
+      document.getElementById('jogos-grid').innerHTML = html;
+    }
+
+    function escolherCampeao(idx) {
+      campeoEscolhido = TEAMS[idx];
+      document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.time-btn')[idx].classList.add('selected');
+      
+      if (campeoEscolhido.name === 'Outro') {
+        document.getElementById('outro-pais').style.display = 'block';
+      } else {
+        document.getElementById('outro-pais').style.display = 'none';
+      }
+    }
+
+    function showScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(name).classList.add('active');
+      
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (name === 'board' || name === 'prize') {
+        carregarApostasFirebase();
+      }
+    }
+
+    async function salvarAposta() {
+      const nome = document.getElementById('nome').value.trim();
+      const outroP = document.getElementById('outro-pais').value.trim();
+      const erroEl = document.getElementById('erro-form');
+
+      erroEl.style.display = 'none';
+      erroEl.textContent = '';
+
+      if (!nome) {
+        erroEl.textContent = '❌ Digite seu nome!';
+        erroEl.style.display = 'block';
+        return;
+      }
+
+      if (!campeoEscolhido) {
+        erroEl.textContent = '❌ Escolha o campeão!';
+        erroEl.style.display = 'block';
+        return;
+      }
+
+      if (campeoEscolhido.name === 'Outro' && !outroP) {
+        erroEl.textContent = '❌ Digite o país!';
+        erroEl.style.display = 'block';
+        return;
+      }
+
+      const scores = {};
+      for (let g of BRAZIL_GAMES) {
+        const br = document.getElementById(`br_${g.id}`).value;
+        const op = document.getElementById(`op_${g.id}`).value;
+        if (!br || !op) {
+          erroEl.textContent = '❌ Preencha todos os 7 jogos!';
+          erroEl.style.display = 'block';
+          return;
+        }
+        scores[g.id] = { integerValue: parseInt(br) + ',' + parseInt(op) };
+      }
+
+      const entry = {
+        nome: nome,
+        campeao: campeoEscolhido.name === 'Outro' ? { name: outroP, flag: '🌍' } : campeoEscolhido,
+        scores: scores,
+        date: new Date().toLocaleDateString('pt-BR'),
+        timestamp: Date.now()
+      };
+
+      const success = await salvarNoFirebase(entry);
+      
+      if (success) {
+        alert('✅ Aposta registrada com sucesso!');
+        
+        // Limpar form
+        document.getElementById('nome').value = '';
+        campeoEscolhido = null;
+        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+        document.getElementById('outro-pais').style.display = 'none';
+        BRAZIL_GAMES.forEach(g => {
+          document.getElementById(`br_${g.id}`).value = '';
+          document.getElementById(`op_${g.id}`).value = '';
+        });
+
+        carregarApostasFirebase();
+        document.getElementById('form').classList.remove('active');
+        document.getElementById('board').classList.add('active');
+      }
+    }
+
+    function atualizarUI() {
+      const total = apostas.length * ENTRADA;
+      
+      document.getElementById('placar-count').textContent = apostas.length;
+      document.getElementById('count-apostas').textContent = apostas.length;
+      document.getElementById('pote-home').textContent = `Pote: ${fmt(total)}`;
+      document.getElementById('pote-home').style.display = apostas.length > 0 ? 'block' : 'none';
+      document.getElementById('pote-prize').textContent = `Pote: ${fmt(total)}`;
+      document.getElementById('premio-camp').textContent = fmt(total * 0.5);
+      document.getElementById('premio-bra').textContent = fmt(total * 0.5);
+
+      if (apostas.length === 0) {
+        document.getElementById('apostas-list').innerHTML = '<p>Nenhuma aposta ainda</p>';
+        return;
+      }
+
+      const html = apostas.map((a, i) => `
+        <div class="entry">
+          <strong>${i + 1}. ${a.nome}</strong>
+          <div>🏆 ${a.campeao.flag} ${a.campeao.name}</div>
+          <div style="font-size: 12px; color: rgba(255,255,255,0.6);">${a.date}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('apostas-list').innerHTML = html;
+    }
+
+    // Inicializar
+    initTimes();
+    initJogos();
+    carregarApostasFirebase();
+  </script>
+</body>
+</html>
