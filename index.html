@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bolão da Copa do Mundo 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Outfit', sans-serif; 
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); 
+      color: #fff; 
+      min-height: 100vh; 
+      padding: 20px; 
+    }
+    .container { max-width: 700px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header h1 { font-size: 32px; margin: 10px 0; font-weight: 700; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
+    .tab-btn { 
+      padding: 8px 16px; 
+      border-radius: 8px; 
+      border: none; 
+      background: rgba(255,255,255,0.1); 
+      color: #fff; 
+      cursor: pointer; 
+      font-weight: 600;
+      font-family: inherit;
+    }
+    .tab-btn.active { background: #ffc107; color: #000; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    input { 
+      width: 100%; 
+      padding: 12px; 
+      margin-bottom: 12px; 
+      border-radius: 8px; 
+      border: none; 
+      font-size: 16px;
+      font-family: inherit;
+    }
+    button { 
+      width: 100%; 
+      padding: 14px; 
+      border-radius: 10px; 
+      border: none; 
+      background: #ffc107; 
+      color: #000; 
+      font-weight: 700; 
+      cursor: pointer; 
+      margin-bottom: 12px;
+      font-family: inherit;
+      font-size: 16px;
+    }
+    button:disabled { opacity: 0.5; }
+    .error { color: #ff6b6b; margin-bottom: 12px; padding: 8px; background: rgba(255,107,107,0.2); border-radius: 6px; }
+    .entry { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+    .times-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+    .time-card {
+      background: linear-gradient(135deg, #2a5f8f, #1a3a5c);
+      border: 3px solid transparent;
+      border-radius: 10px;
+      padding: 15px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .time-card:hover { transform: scale(1.05); background: linear-gradient(135deg, #3a7faf, #2a4a7c); }
+    .time-card.selected { background: #ffc107; border-color: #ff9800; }
+    .time-card.selected .time-name { color: #000; }
+    .time-code { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .time-card.selected .time-code { color: #000; }
+    .time-name { font-size: 12px; font-weight: 600; color: #fff; }
+    .grid-scores { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 12px; }
+    h2 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+    h3 { font-size: 16px; font-weight: 600; margin: 20px 0 12px 0; }
+    .lider { background: rgba(255,193,7,0.15); padding: 12px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #ffc107; text-align: center; }
+    .lider strong { color: #ffc107; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div style="font-size: 50px; margin-bottom: 10px;">⚽</div>
+      <h1>Bolão da Copa do Mundo 2026</h1>
+      <p style="color: rgba(255,255,255,0.7);">🏆 Campeão do Mundo: R$25 | ⚽ Fase de Grupos: R$25</p>
+    </div>
+
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+      <button class="tab-btn" onclick="showScreen('admin')" style="background: #2196F3; color: white; padding: 12px 16px; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; cursor: pointer;">👨‍💼</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showScreen('home')">Início</button>
+      <button class="tab-btn" onclick="showScreen('form')">Apostar</button>
+      <button class="tab-btn" onclick="showScreen('campeao')">🏆 Campeão</button>
+      <button class="tab-btn" onclick="showScreen('grupos')">⚽ Fase de Grupos</button>
+      <button class="tab-btn" onclick="showScreen('prize')">Prêmios</button>
+    </div>
+
+    <!-- HOME -->
+    <div id="home" class="screen active">
+      <div style="background: linear-gradient(135deg, #ffc107, #ff9800); padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center;">
+        <p style="color: #000; font-size: 18px; font-weight: 700; margin-bottom: 10px;">🚀 Pronto para apostar?</p>
+        <p style="color: #000; font-size: 14px;">Escolha seu campeão e os placares!</p>
+      </div>
+
+      <p style="text-align: center; font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 30px;">
+        Administradores: Rafael Andrade | João Dias
+      </p>
+    </div>
+
+    <!-- FORM -->
+    <div id="form" class="screen">
+      <h2>Sua Aposta</h2>
+      <div id="aviso-prazo" style="background: rgba(255,193,7,0.15); padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107; display: none;">
+        <div style="color: #ffc107; font-size: 12px; font-weight: 600;">⏰ Prazo de apostas: até 11/06/2026</div>
+      </div>
+      
+      <input id="nome" type="text" placeholder="Seu nome completo">
+      
+      <h3>🏆 Escolha o Campeão</h3>
+      <div class="times-grid" id="times-grid"></div>
+      <input id="outro-pais" type="text" placeholder="Outro país" style="display: none; margin-top: 10px;">
+
+      <h3>🇧🇷 Placares do Brasil</h3>
+      <div id="jogos-grid"></div>
+
+      <div id="erro-form" class="error" style="display: none;"></div>
+      <button onclick="salvarAposta()">Confirmar Aposta</button>
+    </div>
+
+    <!-- CAMPEÃO -->
+    <div id="campeao" class="screen">
+      <h2>🏆 Campeão da Copa do Mundo</h2>
+
+      <h3 id="titulo-ganhador" style="color: #ffc107; margin-bottom: 15px; display: none;">🏆 Ganhador do Bolão!</h3>
+      <div id="ganhador-info" style="background: linear-gradient(135deg, #ffc107, #ff9800); padding: 20px; border-radius: 10px; margin-bottom: 20px; display: none; text-align: center;">
+        <div style="color: #000; font-size: 18px; font-weight: 700; margin-bottom: 10px;" id="ganhador-nome"></div>
+        <div style="color: #000; font-size: 16px;" id="ganhador-pais"></div>
+      </div>
+
+      <h3>📊 Contagem de Votos por País</h3>
+      <div id="contagem-votos" style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 20px;"></div>
+
+      <h3>📋 Quem Votou em Cada País</h3>
+      <div id="votos-por-pais" style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px;"></div>
+    </div>
+
+    <!-- FASE DE GRUPOS -->
+    <div id="grupos" class="screen">
+      <h2>⚽ Fase de Grupos - Placares do Brasil</h2>
+      
+      <div id="ranking-resultado" style="display: none; margin-bottom: 20px;">
+        <h3>🏆 Ranking de Pontuação</h3>
+        <div id="ranking-list" style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px;"></div>
+      </div>
+
+      <h3>📋 Todas as Apostas</h3>
+      <div id="apostas-grupos">Carregando...</div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="admin" class="screen">
+      <h2>👨‍💼 Painel Administrativo</h2>
+      
+      <div style="background: rgba(255,193,7,0.15); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+        <label style="font-size: 12px; color: rgba(255,255,255,0.7); display: block; margin-bottom: 8px;">Senha Admin</label>
+        <input type="password" id="senha-admin" placeholder="Digite a senha">
+        <button onclick="verificarSenhaAdmin()" style="background: #2196F3; margin-top: 10px;">Acessar Painel</button>
+        <button onclick="mostrarRecuperaSenha()" style="background: #FF9800; margin-top: 10px;">Esqueci a Senha</button>
+      </div>
+
+      <div id="recupera-senha-div" style="display: none; background: rgba(255,193,7,0.15); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+        <h3 style="margin-bottom: 15px; color: #ffc107;">🔓 Recuperar Senha</h3>
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 12px; color: rgba(255,255,255,0.7); display: block; margin-bottom: 6px;">Qual é o nome da sua primeira escola?</label>
+          <input type="text" id="pergunta-seguranca" placeholder="Digite o nome da escola">
+        </div>
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 12px; color: rgba(255,255,255,0.7); display: block; margin-bottom: 6px;">Digite a nova senha (mínimo 6 caracteres)</label>
+          <input type="password" id="nova-senha-reset" placeholder="Nova senha">
+        </div>
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 12px; color: rgba(255,255,255,0.7); display: block; margin-bottom: 6px;">Confirme a nova senha</label>
+          <input type="password" id="confirmar-senha-reset" placeholder="Confirme a senha">
+        </div>
+        <button onclick="resetarSenha()" style="background: #4CAF50;">Resetar Senha</button>
+        <button onclick="ocultarRecuperaSenha()" style="background: #666;">Cancelar</button>
+      </div>
+
+      <div id="painel-admin" style="display: none;">
+        <button onclick="resetarAdmin()" style="background: #f44336; margin-bottom: 20px; width: auto; float: right;">Sair do Painel</button>
+        <div style="clear: both;"></div>
+
+        <h3 style="color: #ffc107;">📊 Inserir Placares Reais</h3>
+        <div style="background: rgba(255,193,7,0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 12px; color: rgba(255,255,255,0.7);">Jogo 1: BRA vs MAR</label>
+            <div class="grid-scores">
+              <input type="number" id="real_g1br" min="0" max="20" placeholder="0">
+              <span style="font-weight: 700;">×</span>
+              <input type="number" id="real_g1op" min="0" max="20" placeholder="0">
+            </div>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 12px; color: rgba(255,255,255,0.7);">Jogo 2: BRA vs HAI</label>
+            <div class="grid-scores">
+              <input type="number" id="real_g2br" min="0" max="20" placeholder="0">
+              <span style="font-weight: 700;">×</span>
+              <input type="number" id="real_g2op" min="0" max="20" placeholder="0">
+            </div>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 12px; color: rgba(255,255,255,0.7);">Jogo 3: BRA vs ESC</label>
+            <div class="grid-scores">
+              <input type="number" id="real_g3br" min="0" max="20" placeholder="0">
+              <span style="font-weight: 700;">×</span>
+              <input type="number" id="real_g3op" min="0" max="20" placeholder="0">
+            </div>
+          </div>
+
+          <h3 style="margin-top: 20px; margin-bottom: 10px;">🏆 Definir Ganhador do Bolão (Último Jogo)</h3>
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 12px; color: rgba(255,255,255,0.7); display: block; margin-bottom: 8px;">País Campeão</label>
+            <input type="text" id="pais-ganhador" placeholder="Ex: Brasil, Argentina, França...">
+          </div>
+
+          <button onclick="definirGanhadorFinal()" style="background: #4CAF50; margin-bottom: 15px;">Definir Ganhador Final</button>
+
+          <h3 style="margin-top: 20px; margin-bottom: 10px;">📊 Calcular Ranking por Jogo</h3>
+            <button onclick="calcularJogo(1)" style="background: #FF9800;">Calcular Jogo 1</button>
+            <button onclick="calcularJogo(2)" style="background: #FF9800;">Calcular Jogo 2</button>
+            <button onclick="calcularJogo(3)" style="background: #FF9800;">Calcular Jogo 3</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIZE -->
+    <div id="prize" class="screen">
+      <h2>Prêmios</h2>
+      <div style="font-size: 24px; font-weight: 700; color: #ffc107; margin-bottom: 20px;" id="pote-prize">Pote Total: R$ 0,00</div>
+      
+      <h3>🏆 Campeão do Mundo</h3>
+      <div style="background: rgba(255,193,7,0.15); padding: 12px; border-radius: 10px; margin-bottom: 20px;">
+        <div style="font-size: 16px; font-weight: 700; color: #ffc107; margin-bottom: 8px;">Pote: <strong id="premio-camp" style="color: #ffc107;">R$ 0,00</strong></div>
+        <div style="font-size: 14px; color: rgba(255,255,255,0.7);">Será dividido igualmente entre quem acertar o campeão</div>
+      </div>
+
+      <h3>⚽ Placares do Brasil (Fase de Grupos)</h3>
+      <div style="background: rgba(76,175,80,0.15); padding: 12px; border-radius: 10px; margin-bottom: 20px;">
+        <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 8px;">Pote: <strong id="premio-placares" style="color: #4CAF50;">R$ 0,00</strong></div>
+        <div style="margin-bottom: 8px;">🥇 1º lugar (70%): <strong id="p-placares-1" style="color: #ffc107;">R$ 0</strong></div>
+        <div style="margin-bottom: 8px;">🥈 2º lugar (20%): <strong id="p-placares-2" style="color: #c0c0c0;">R$ 0</strong></div>
+        <div>🥉 3º lugar (10%): <strong id="p-placares-3" style="color: #cd7f32;">R$ 0</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Limpar localStorage ao iniciar (comentado para manter dados)
+    // localStorage.removeItem('apostas-bolao');
+    
+    
+    const ENTRADA_CAMPEAO = 25;
+    const ENTRADA_PLACARES = 25;
+    const DATA_LIMITE = new Date(2026, 5, 11); // 11/06/2026
+    const TEAMS = [
+      { code: 'BRA', name: 'Brasil' }, { code: 'ARG', name: 'Argentina' }, { code: 'FRA', name: 'França' },
+      { code: 'ING', name: 'Inglaterra' }, { code: 'ESP', name: 'Espanha' }, { code: 'ALE', name: 'Alemanha' },
+      { code: 'POR', name: 'Portugal' }, { code: 'HOL', name: 'Países Baixos' }, { code: 'BEL', name: 'Bélgica' },
+      { code: 'URU', name: 'Uruguai' }, { code: 'CRO', name: 'Croácia' }, { code: 'MAR', name: 'Marrocos' },
+      { code: 'EUA', name: 'EUA' }, { code: 'JAP', name: 'Japão' }, { code: 'COL', name: 'Colômbia' },
+      { code: 'MEX', name: 'México' }, { code: '?', name: 'Outro' }
+    ];
+
+    const GAMES = [
+      { id: 'g1', opponent: 'Marrocos', code: 'MAR' },
+      { id: 'g2', opponent: 'Haiti', code: 'HAI' },
+      { id: 'g3', opponent: 'Escócia', code: 'ESC' }
+    ];
+
+    let chosen = null;
+    let apostas = [];
+
+    const fmt = (v) => `R$ ${v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+
+    function initTimes() {
+      const html = TEAMS.map((t, i) => `
+        <div class="time-card" onclick="selectTeam(${i}, '${t.code}', '${t.name}')">
+          <div class="time-code">${t.code}</div>
+          <div class="time-name">${t.name}</div>
+        </div>
+      `).join('');
+      document.getElementById('times-grid').innerHTML = html;
+    }
+
+    function selectTeam(idx, code, name) {
+      chosen = { code, name };
+      document.querySelectorAll('.time-card').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('.time-card')[idx].classList.add('selected');
+      
+      const outro = document.getElementById('outro-pais');
+      if (name === 'Outro') {
+        outro.style.display = 'block';
+      } else {
+        outro.style.display = 'none';
+        outro.value = '';
+      }
+    }
+
+    function initJogos() {
+      const html = GAMES.map(g => `
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 14px; margin-bottom: 6px; font-weight: 600;">Jogo: BRA vs ${g.code} ${g.opponent}</div>
+          <div class="grid-scores">
+            <input type="number" id="br_${g.id}" min="0" max="20" placeholder="0">
+            <span style="font-weight: 700; font-size: 16px;">×</span>
+            <input type="number" id="op_${g.id}" min="0" max="20" placeholder="0">
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('jogos-grid').innerHTML = html;
+    }
+
+    function showScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(name).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      if (event && event.target) {
+        event.target.classList.add('active');
+      }
+      
+      // Mostrar aviso de prazo se abrir formulário
+      if (name === 'form') {
+        const agora = new Date();
+        const avisPrazo = document.getElementById('aviso-prazo');
+        if (avisPrazo) {
+          avisPrazo.style.display = agora <= DATA_LIMITE ? 'block' : 'none';
+        }
+      }
+      
+      if (name === 'campeao' || name === 'grupos' || name === 'prize' || name === 'admin') loadData();
+    }
+
+    function mostrarRecuperaSenha() {
+      document.getElementById('recupera-senha-div').style.display = 'block';
+    }
+
+    function ocultarRecuperaSenha() {
+      document.getElementById('recupera-senha-div').style.display = 'none';
+      document.getElementById('pergunta-seguranca').value = '';
+      document.getElementById('nova-senha-reset').value = '';
+      document.getElementById('confirmar-senha-reset').value = '';
+    }
+
+    function resetarSenha() {
+      const resposta = document.getElementById('pergunta-seguranca').value.trim().toLowerCase();
+      const novaSenha = document.getElementById('nova-senha-reset').value;
+      const confirmarSenha = document.getElementById('confirmar-senha-reset').value;
+      
+      // Resposta correta: "patotinha"
+      if (resposta !== 'patotinha') {
+        alert('❌ Resposta incorreta!');
+        return;
+      }
+      
+      if (novaSenha.length < 6) {
+        alert('❌ Nova senha deve ter pelo menos 6 caracteres!');
+        return;
+      }
+      
+      if (novaSenha !== confirmarSenha) {
+        alert('❌ As senhas não conferem!');
+        return;
+      }
+      
+      localStorage.setItem('senha-admin', novaSenha);
+      alert('✅ Senha resetada com sucesso!\n\nAcesse o painel com a nova senha.');
+      
+      document.getElementById('recupera-senha-div').style.display = 'none';
+      document.getElementById('pergunta-seguranca').value = '';
+      document.getElementById('nova-senha-reset').value = '';
+      document.getElementById('confirmar-senha-reset').value = '';
+      document.getElementById('senha-admin').value = '';
+    }
+
+    function resetarAdmin() {
+      document.getElementById('painel-admin').style.display = 'none';
+      document.getElementById('senha-admin').style.display = 'block';
+      document.getElementById('senha-admin').value = '';
+      document.querySelector('#admin button[onclick="verificarSenhaAdmin()"]').style.display = 'block';
+      alert('Painel fechado!');
+    }
+
+    function verificarSenhaAdmin() {
+      const senha = document.getElementById('senha-admin').value;
+      const SENHA_CORRETA = localStorage.getItem('senha-admin') || 'rafael123';
+      
+      if (senha === SENHA_CORRETA) {
+        document.getElementById('painel-admin').style.display = 'block';
+        document.getElementById('senha-admin').style.display = 'none';
+        event.target.style.display = 'none';
+        alert('✅ Acesso liberado!');
+      } else {
+        alert('❌ Senha incorreta!');
+        document.getElementById('senha-admin').value = '';
+      }
+    }
+
+    function loadData() {
+      apostas = JSON.parse(localStorage.getItem('apostas-bolao') || '[]');
+      updateUI();
+    }
+
+    function definirGanhadorFinal() {
+      const paisGanhador = document.getElementById('pais-ganhador').value.trim();
+      
+      if (!paisGanhador) {
+        alert('❌ Digite o país campeão!');
+        return;
+      }
+      
+      localStorage.setItem('ganhador-bolao', JSON.stringify({ pais: paisGanhador }));
+      alert('✅ Ganhador definido! A aba Campeão foi atualizada.');
+      
+      // Redirecionar para aba Campeão
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('campeao').classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn')[2].classList.add('active'); // Aba Campeão é a 3ª
+      
+      loadData();
+    }
+
+    function calcularJogo(numeroJogo) {
+      const apostas = JSON.parse(localStorage.getItem('apostas-bolao') || '[]');
+      
+      let g1br = 0, g1op = 0, g2br = 0, g2op = 0, g3br = 0, g3op = 0;
+      let jogoValido = true;
+      
+      if (numeroJogo >= 1) {
+        g1br = parseInt(document.getElementById('real_g1br').value);
+        g1op = parseInt(document.getElementById('real_g1op').value);
+        if (isNaN(g1br) || isNaN(g1op)) {
+          alert('❌ Preencha o placar do Jogo 1!');
+          return;
+        }
+      }
+      
+      if (numeroJogo >= 2) {
+        g2br = parseInt(document.getElementById('real_g2br').value);
+        g2op = parseInt(document.getElementById('real_g2op').value);
+        if (isNaN(g2br) || isNaN(g2op)) {
+          alert('❌ Preencha o placar do Jogo 2!');
+          return;
+        }
+      }
+      
+      if (numeroJogo >= 3) {
+        g3br = parseInt(document.getElementById('real_g3br').value);
+        g3op = parseInt(document.getElementById('real_g3op').value);
+        if (isNaN(g3br) || isNaN(g3op)) {
+          alert('❌ Preencha o placar do Jogo 3!');
+          return;
+        }
+      }
+
+      // Calcular pontuação até o jogo atual
+      const ranking = apostas.map(a => {
+        let pontos = 0;
+
+        // Se não tem scores, retorna 0 pontos
+        if (!a.scores) {
+          return { nome: a.nome, pontos: 0 };
+        }
+
+        // Jogo 1
+        if (numeroJogo >= 1) {
+          if (a.scores.g1br === g1br && a.scores.g1op === g1op) {
+            pontos += 3;
+          } else if ((a.scores.g1br > a.scores.g1op && g1br > g1op) ||
+                     (a.scores.g1br < a.scores.g1op && g1br < g1op) ||
+                     (a.scores.g1br === a.scores.g1op && g1br === g1op)) {
+            pontos += 1;
+          }
+        }
+
+        // Jogo 2
+        if (numeroJogo >= 2) {
+          if (a.scores.g2br === g2br && a.scores.g2op === g2op) {
+            pontos += 3;
+          } else if ((a.scores.g2br > a.scores.g2op && g2br > g2op) ||
+                     (a.scores.g2br < a.scores.g2op && g2br < g2op) ||
+                     (a.scores.g2br === a.scores.g2op && g2br === g2op)) {
+            pontos += 1;
+          }
+        }
+
+        // Jogo 3
+        if (numeroJogo >= 3) {
+          if (a.scores.g3br === g3br && a.scores.g3op === g3op) {
+            pontos += 3;
+          } else if ((a.scores.g3br > a.scores.g3op && g3br > g3op) ||
+                     (a.scores.g3br < a.scores.g3op && g3br < g3op) ||
+                     (a.scores.g3br === a.scores.g3op && g3br === g3op)) {
+            pontos += 1;
+          }
+        }
+
+        return { nome: a.nome, pontos };
+      }).sort((a, b) => b.pontos - a.pontos);
+
+      // Mostrar ranking
+      const html = ranking.map((r, i) => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <span>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}. ${r.nome}</span>
+          <span style="color: #ffc107; font-weight: 600;">${r.pontos} pts</span>
+        </div>
+      `).join('');
+
+      document.getElementById('ranking-list').innerHTML = html;
+      document.getElementById('ranking-resultado').style.display = 'block';
+      
+      // Redirecionar para aba Fase de Grupos
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('grupos').classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-btn')[3].classList.add('active'); // Aba Grupos é a 4ª
+      
+      alert(`✅ Ranking atualizado até Jogo ${numeroJogo}!`);
+    }
+
+    function baixarBackup() {
+      if (apostas.length === 0) {
+        alert('Nenhuma aposta para baixar!');
+        return;
+      }
+
+      // Cabeçalho CSV
+      let csv = 'Nome,Campeão,Jogo 1,Jogo 2,Jogo 3,Data\n';
+
+      // Adicionar cada aposta
+      apostas.forEach(a => {
+        const campeao = a.campeao ? `${a.campeao.code} ${a.campeao.name}` : '-';
+        const jogo1 = a.scores ? `${a.scores.g1br}×${a.scores.g1op}` : '-';
+        const jogo2 = a.scores ? `${a.scores.g2br}×${a.scores.g2op}` : '-';
+        const jogo3 = a.scores ? `${a.scores.g3br}×${a.scores.g3op}` : '-';
+        
+        csv += `"${a.nome}","${campeao}","${jogo1}","${jogo2}","${jogo3}","${a.date}"\n`;
+      });
+
+      // Criar e baixar arquivo
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `apostas_bolao_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert('✅ Arquivo baixado com sucesso!');
+    }
+
+    async function salvarAposta() {
+      const nome = document.getElementById('nome').value.trim();
+      const outro = document.getElementById('outro-pais').value.trim();
+      const erro = document.getElementById('erro-form');
+
+      erro.style.display = 'none';
+
+      // Verificar data limite
+      const agora = new Date();
+      if (agora > DATA_LIMITE) {
+        erro.textContent = '❌ Prazo de apostas encerrado! (limite: 11/06/2026)';
+        erro.style.display = 'block';
+        return;
+      }
+
+      // Verificar se já apostou
+      const jaApostou = apostas.some(a => a.nome.toLowerCase() === nome.toLowerCase());
+      if (jaApostou) {
+        erro.textContent = '❌ Você já fez uma aposta! Uma aposta por pessoa.';
+        erro.style.display = 'block';
+        return;
+      }
+
+      if (!nome) { erro.textContent = '❌ Nome?'; erro.style.display = 'block'; return; }
+      
+      // Verificar se apostou em pelo menos uma categoria
+      const temCampeao = chosen !== null;
+      const g1br = document.getElementById('br_g1').value;
+      const g1op = document.getElementById('op_g1').value;
+      const g2br = document.getElementById('br_g2').value;
+      const g2op = document.getElementById('op_g2').value;
+      const g3br = document.getElementById('br_g3').value;
+      const g3op = document.getElementById('op_g3').value;
+      
+      const temPlacar = g1br && g1op && g2br && g2op && g3br && g3op;
+
+      if (!temCampeao && !temPlacar) {
+        erro.textContent = '❌ Aposto em pelo menos uma categoria (Campeão ou Placares)!';
+        erro.style.display = 'block';
+        return;
+      }
+
+      if (chosen && chosen.name === 'Outro' && !outro) { erro.textContent = '❌ País?'; erro.style.display = 'block'; return; }
+
+      const entry = {
+        nome: nome,
+        campeao: temCampeao ? {
+          code: chosen.name === 'Outro' ? '?' : chosen.code,
+          name: chosen.name === 'Outro' ? outro : chosen.name
+        } : null,
+        scores: temPlacar ? { 
+          g1br: parseInt(g1br), 
+          g1op: parseInt(g1op), 
+          g2br: parseInt(g2br), 
+          g2op: parseInt(g2op), 
+          g3br: parseInt(g3br), 
+          g3op: parseInt(g3op) 
+        } : null,
+        date: new Date().toLocaleDateString('pt-BR'),
+        timestamp: Date.now()
+      };
+
+      // Salvar no localStorage (sempre funciona)
+      apostas.push(entry);
+      localStorage.setItem('apostas-bolao', JSON.stringify(apostas));
+      
+      alert('✅ Aposta registrada!');
+
+      document.getElementById('nome').value = '';
+      chosen = null;
+      document.querySelectorAll('.time-card').forEach(el => el.classList.remove('selected'));
+      document.getElementById('outro-pais').value = '';
+      GAMES.forEach(g => {
+        document.getElementById(`br_${g.id}`).value = '';
+        document.getElementById(`op_${g.id}`).value = '';
+      });
+
+      loadData();
+      showScreen('board');
+      
+      // Enviar para Firestore em background (sem bloquear)
+      enviarParaFirestore(entry).catch(err => console.log('Sync background:', err));
+    }
+
+    async function enviarParaFirestore(entry) {
+      try {
+        const FIREBASE_DB = "https://firestore.googleapis.com/v1/projects/bolao-copa-5750f/databases/(default)/documents/apostas";
+        const API_KEY = "AIzaSyAocYorgMDHSf2y8rCeaVyvT7DztI";
+        
+        await fetch(`${FIREBASE_DB}?key=${API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              name: { stringValue: entry.nome },
+              champion: entry.campeao ? {
+                mapValue: {
+                  fields: {
+                    code: { stringValue: entry.campeao.code },
+                    name: { stringValue: entry.campeao.name }
+                  }
+                }
+              } : { nullValue: null },
+              scores: entry.scores ? {
+                mapValue: {
+                  fields: {
+                    g1br: { integerValue: entry.scores.g1br },
+                    g1op: { integerValue: entry.scores.g1op },
+                    g2br: { integerValue: entry.scores.g2br },
+                    g2op: { integerValue: entry.scores.g2op },
+                    g3br: { integerValue: entry.scores.g3br },
+                    g3op: { integerValue: entry.scores.g3op }
+                  }
+                }
+              } : { nullValue: null },
+              date: { stringValue: entry.date },
+              timestamp: { integerValue: entry.timestamp }
+            }
+          })
+        });
+        console.log('✅ Sincronizado com Firestore');
+      } catch (err) {
+        console.log('Firebase sync error (não impacta o app):', err);
+      }
+    }
+
+    function updateUI() {
+      try {
+        // Contar quantas apostas em cada categoria
+        let countCampeao = 0;
+        let countPlacares = 0;
+
+        apostas.forEach(a => {
+          if (a.campeao) countCampeao++;
+          if (a.scores) countPlacares++;
+        });
+
+        // Calcular potes
+        const poteCampeao = countCampeao * ENTRADA_CAMPEAO;
+        const potePlacares = countPlacares * ENTRADA_PLACARES;
+        const total = poteCampeao + potePlacares;
+
+        const countEl = document.getElementById('count');
+        if (countEl) countEl.textContent = apostas.length;
+        
+        const countApostasEl = document.getElementById('count-apostas');
+        if (countApostasEl) countApostasEl.textContent = apostas.length;
+        
+        const potePrize = document.getElementById('pote-prize');
+        if (potePrize) {
+          potePrize.textContent = `Pote Total: ${fmt(total)}`;
+        }
+        
+        // Prêmio Campeão (soma total)
+        const premioCamp = document.getElementById('premio-camp');
+        if (premioCamp) {
+          premioCamp.textContent = fmt(poteCampeao);
+        }
+
+        // Prêmio Placares
+        const premioPlacaresEl = document.getElementById('premio-placares');
+        if (premioPlacaresEl) {
+          premioPlacaresEl.textContent = fmt(potePlacares);
+        }
+        
+        const pPlacares1 = document.getElementById('p-placares-1');
+        if (pPlacares1) pPlacares1.textContent = fmt(potePlacares * 0.7);
+        
+        const pPlacares2 = document.getElementById('p-placares-2');
+        if (pPlacares2) pPlacares2.textContent = fmt(potePlacares * 0.2);
+        
+        const pPlacares3 = document.getElementById('p-placares-3');
+        if (pPlacares3) pPlacares3.textContent = fmt(potePlacares * 0.1);
+
+        const camp = {};
+        apostas.forEach(a => {
+          if (a && a.campeao && a.campeao.code && a.campeao.name) {
+            const key = `${a.campeao.code} ${a.campeao.name}`;
+            camp[key] = (camp[key] || 0) + 1;
+          }
+        });
+
+        // Mostrar contagem de votos ordenada
+        const contagemVotos = Object.entries(camp)
+          .sort((a, b) => b[1] - a[1])
+          .map(([pais, votos]) => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <span style="font-weight: 600;">${pais}</span>
+              <span style="background: #ffc107; color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 700;">${votos} voto${votos > 1 ? 's' : ''}</span>
+            </div>
+          `).join('');
+
+        const contagemEl = document.getElementById('contagem-votos');
+        if (contagemEl) {
+          contagemEl.innerHTML = contagemVotos || '<p>Nenhum voto ainda</p>';
+        }
+
+        // Montar lista de quem votou em cada país
+        const votosPorPais = {};
+        apostas.forEach(a => {
+          if (a && a.campeao && a.campeao.name) {
+            const pais = `${a.campeao.code} ${a.campeao.name}`;
+            if (!votosPorPais[pais]) {
+              votosPorPais[pais] = [];
+            }
+            votosPorPais[pais].push(a.nome);
+          }
+        });
+
+        const htmlVotos = Object.entries(votosPorPais)
+          .sort((a, b) => b[1].length - a[1].length)
+          .map(([pais, nomes]) => `
+            <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+              <div style="font-weight: 700; color: #ffc107; margin-bottom: 8px;">${pais} (${nomes.length})</div>
+              <div style="font-size: 13px;">
+                ${nomes.map(nome => `<div style="padding: 4px 0;">• ${nome}</div>`).join('')}
+              </div>
+            </div>
+          `).join('');
+
+        const votosEl = document.getElementById('votos-por-pais');
+        if (votosEl) {
+          votosEl.innerHTML = htmlVotos || '<p>Nenhum voto ainda</p>';
+        }
+
+        // Verificar se tem ganhador salvo
+        const ganhadorSalvo = localStorage.getItem('ganhador-bolao');
+        if (ganhadorSalvo) {
+          const ganhadoresObj = JSON.parse(ganhadorSalvo);
+          const ganhadorApostas = apostas.filter(a => {
+            if (!a.campeao) return false;
+            const chave = `${a.campeao.code} ${a.campeao.name}`;
+            return chave === ganhadoresObj.pais;
+          });
+
+          if (ganhadorApostas.length > 0 && ganhadorApostas[0].campeao) {
+            document.getElementById('titulo-ganhador').style.display = 'block';
+            document.getElementById('ganhador-info').style.display = 'block';
+            document.getElementById('ganhador-nome').textContent = ganhadorApostas[0].nome;
+            document.getElementById('ganhador-pais').textContent = `Votou em: ${ganhadorApostas[0].campeao.code} ${ganhadorApostas[0].campeao.name}`;
+          }
+        } else {
+          document.getElementById('titulo-ganhador').style.display = 'none';
+          document.getElementById('ganhador-info').style.display = 'none';
+        }
+
+        if (apostas.length === 0) {
+          const apostasCampeao = document.getElementById('apostas-campeao');
+          if (apostasCampeao) apostasCampeao.innerHTML = '<p>Nenhuma aposta</p>';
+          const apostasGrupos = document.getElementById('apostas-grupos');
+          if (apostasGrupos) apostasGrupos.innerHTML = '<p>Nenhuma aposta</p>';
+          return;
+        }
+
+        // Aba CAMPEÃO
+        const htmlCampeao = apostas.map((a, i) => {
+          if (!a.campeao) {
+            return `
+              <div class="entry">
+                <strong>${i+1}. ${a.nome}</strong>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin: 8px 0;">${a.date}</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Não apostou em campeão</div>
+              </div>
+            `;
+          }
+          
+          return `
+            <div class="entry">
+              <strong>${i+1}. ${a.nome}</strong>
+              <div style="margin: 6px 0; font-size: 18px;">🏆 ${a.campeao.code} ${a.campeao.name}</div>
+              <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin: 8px 0;">${a.date}</div>
+            </div>
+          `;
+        }).join('');
+        
+        const apostasCampeao = document.getElementById('apostas-campeao');
+        if (apostasCampeao) apostasCampeao.innerHTML = htmlCampeao;
+
+        // Aba GRUPOS
+        const htmlGrupos = apostas.map((a, i) => {
+          if (!a.scores) {
+            return `
+              <div class="entry">
+                <strong>${i+1}. ${a.nome}</strong>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin: 8px 0;">${a.date}</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Não apostou nos placares</div>
+              </div>
+            `;
+          } else {
+            const g1br = a.scores.g1br;
+            const g1op = a.scores.g1op;
+            const g2br = a.scores.g2br;
+            const g2op = a.scores.g2op;
+            const g3br = a.scores.g3br;
+            const g3op = a.scores.g3op;
+
+            return `
+              <div class="entry">
+                <strong>${i+1}. ${a.nome}</strong>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin: 8px 0;">${a.date}</div>
+                <div style="font-size: 12px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
+                  BRA vs MAR: ${g1br} × ${g1op}<br>
+                  BRA vs HAI: ${g2br} × ${g2op}<br>
+                  BRA vs ESC: ${g3br} × ${g3op}
+                </div>
+              </div>
+            `;
+          }
+        }).join('');
+        
+        const apostasGrupos = document.getElementById('apostas-grupos');
+        if (apostasGrupos) apostasGrupos.innerHTML = htmlGrupos;
+      } catch (err) {
+        console.error('Erro ao atualizar UI:', err);
+      }
+    }
+
+    initTimes();
+    initJogos();
+    loadData();
+  </script>
+</body>
+</html>
