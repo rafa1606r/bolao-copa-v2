@@ -414,7 +414,6 @@
         document.querySelectorAll('.time-card').forEach(el => el.classList.remove('selected'));
         document.querySelectorAll('.time-card')[idx].classList.add('selected');
         
-        // Mostrar input se for "Outro"
         if (code === '?') {
           document.getElementById('outro-pais').style.display = 'block';
           document.getElementById('outro-pais').focus();
@@ -442,7 +441,6 @@
         return;
       }
 
-      // Se escolheu "Outro", validar se digitou o país
       let campeao = escolhidoCampeao;
       if (escolhidoCampeao && escolhidoCampeao.code === '?') {
         if (!outro) {
@@ -571,6 +569,7 @@
 
       const total = (countCamp + countGrupos + countOitavas + countQuartas + countSemi + countFinal) * 25;
 
+      document.getElementById('pote-total').textContent = (total).toLocaleString('pt-BR');
       document.getElementById('premio-camp').textContent = (countCamp * 25).toLocaleString('pt-BR');
       document.getElementById('premio-grupos').textContent = (countGrupos * 25).toLocaleString('pt-BR');
       document.getElementById('premio-oitavas').textContent = (countOitavas * 25).toLocaleString('pt-BR');
